@@ -4,6 +4,11 @@
     <ProjectReference Include="..\EtlMonitoring.Core\EtlMonitoring.Core.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.66" />
+    <PackageReference Include="MicroSoft.Data.SqlClient" Version="6.1.4" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
