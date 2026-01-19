@@ -1,0 +1,6 @@
+@EtlMonitoring.Api_HostAddress = http://localhost:5105
+
+GET {{EtlMonitoring.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
