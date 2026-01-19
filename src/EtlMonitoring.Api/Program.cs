@@ -32,6 +32,14 @@ builder.Services.AddCors(options =>
     });
 });
 
+// Configurar Health Checks
+builder.Services.AddHealthChecks()
+    .AddSqlServer(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection")!,
+        name: "database",
+        tags: new[] { "db", "sql", "sqlserver" }
+    );
+
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrEmpty(connectionString))
@@ -55,6 +63,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
+
+// Mapear Health Checks
+app.MapHealthChecks("/health");
 
 app.UseAuthorization();
 
