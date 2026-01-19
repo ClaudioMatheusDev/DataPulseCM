@@ -48,6 +48,16 @@ namespace EtlMonitor.Api.Controllers
             return Ok(new { data = jobs, count = jobs.Count });
         }
 
+        // GET: api/jobs/paginated
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetJobsPaginated(
+            [FromQuery] PaginationParametersDto pagination,
+            [FromQuery] JobExecutionFiltrosDto? filtros = null)
+        {
+            var result = await _repository.GetJobExecutionsPaginatedAsync(pagination, filtros);
+            return Ok(result);
+        }
+
         // POST: api/jobs/start
         [HttpPost("start")]
         public async Task<IActionResult> StartJob([FromBody] StartJobRequest request)

@@ -95,6 +95,89 @@ namespace EtlMonitoring.Infrastructure.Repositories
             return result;
         }
 
+        public async Task<PaginatedResultDto<JobExecution>> GetJobExecutionsPaginatedAsync(
+            PaginationParametersDto pagination,
+            JobExecutionFiltrosDto? filtros = null)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            var whereConditions = new List<string>();
+            var parameters = new DynamicParameters();
+
+            if (!string.IsNullOrWhiteSpace(filtros?.JobName))
+            {
+                whereConditions.Add("JobName LIKE @JobName");
+                parameters.Add("@JobName", $"%{filtros.JobName}%");
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtros?.Status))
+            {
+                whereConditions.Add("Status = @Status");
+                parameters.Add("@Status", filtros.Status);
+            }
+
+            if (filtros?.StartDate.HasValue == true)
+            {
+                whereConditions.Add("StartDateTime >= @StartDate");
+                parameters.Add("@StartDate", filtros.StartDate.Value);
+            }
+
+            if (filtros?.EndDate.HasValue == true)
+            {
+                whereConditions.Add("StartDateTime <= @EndDate");
+                parameters.Add("@EndDate", filtros.EndDate.Value);
+            }
+
+            var whereClause = whereConditions.Any()
+                ? "WHERE " + string.Join(" AND ", whereConditions)
+                : "";
+
+            // Contar total de registros
+            var countSql = $@"
+                SELECT COUNT(*)
+                FROM [dbo].[ETL_JobExecutionLog]
+                {whereClause}";
+
+            var totalCount = await connection.ExecuteScalarAsync<int>(countSql, parameters);
+
+            // Buscar dados paginados
+            var offset = (pagination.Page - 1) * pagination.PageSize;
+            parameters.Add("@Offset", offset);
+            parameters.Add("@PageSize", pagination.PageSize);
+
+            var dataSql = $@"
+                SELECT 
+                    ExecutionId,
+                    JobName,
+                    StartDateTime,
+                    EndDateTime,
+                    Status,
+                    ErrorMessage,
+                    RowsProcessed,
+                    RowsInserted,
+                    RowsUpdated,
+                    RowsDeleted,
+                    ExecutionDurationMs,
+                    ServerName,
+                    DatabaseName,
+                    CreatedAt
+                FROM [dbo].[ETL_JobExecutionLog]
+                {whereClause}
+                ORDER BY StartDateTime DESC
+                OFFSET @Offset ROWS
+                FETCH NEXT @PageSize ROWS ONLY";
+
+            var data = await connection.QueryAsync<JobExecution>(dataSql, parameters);
+
+            return new PaginatedResultDto<JobExecution>
+            {
+                Data = data,
+                Page = pagination.Page,
+                PageSize = pagination.PageSize,
+                TotalCount = totalCount
+            };
+        }
+
         public async Task<IEnumerable<JobExecution>> GetRecentExecutionsAsync(int limit = 50)
         {
             using var connection = new SqlConnection(_connectionString);

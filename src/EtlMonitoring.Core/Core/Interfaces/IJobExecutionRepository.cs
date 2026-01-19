@@ -11,6 +11,9 @@ namespace EtlMonitoring.Core.Core.Interfaces
         
         // Consultas
         Task<IList<JobExecutionDto>> GetJobExecutionsAsync(JobExecutionFiltrosDto filtros);
+        Task<PaginatedResultDto<JobExecution>> GetJobExecutionsPaginatedAsync(
+            PaginationParametersDto pagination,
+            JobExecutionFiltrosDto? filtros = null);
         Task<JobExecution?> GetJobExecutionByIdAsync(long executionId);
         Task<IEnumerable<JobExecution>> GetRecentExecutionsAsync(int limit = 50);
         
