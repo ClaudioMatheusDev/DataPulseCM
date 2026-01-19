@@ -1,12 +1,26 @@
 using EtlMonitoring.Core.Core.Interfaces;
 using EtlMonitoring.Infrastructure.Repositories;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "DataPulseCM - ETL Monitoring API",
+        Version = "v1",
+        Description = "API REST para monitoramento centralizado de jobs ETL. Permite rastreamento de execuções, consulta de histórico e análise de falhas.",
+        Contact = new OpenApiContact
+        {
+            Name = "Claudio Matheus",
+            Url = new Uri("https://github.com/ClaudioMatheusDev")
+        }
+    });
+});
 
 builder.Services.AddCors(options =>
 {
