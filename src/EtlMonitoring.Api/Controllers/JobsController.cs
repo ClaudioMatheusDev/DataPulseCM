@@ -9,10 +9,12 @@ namespace EtlMonitor.Api.Controllers
     public class JobsController : ControllerBase
     {
         private readonly IJobExecutionRepository _repository;
+        private readonly ILogger<JobsController> _logger;
 
-        public JobsController(IJobExecutionRepository repository)
+        public JobsController(IJobExecutionRepository repository, ILogger<JobsController> logger)
         {
             _repository = repository;
+            _logger = logger;
         }
 
         // GET: api/jobs
@@ -56,6 +58,10 @@ namespace EtlMonitor.Api.Controllers
                 return BadRequest(new { message = "Nome do job é obrigatório" });
 
             var executionId = await _repository.CreateJobExecutionAsync(request.JobName);
+            
+            _logger.LogInformation("Job {JobName} iniciado | ExecutionId: {ExecutionId}", 
+                request.JobName, executionId);
+            
             return Ok(new { executionId, jobName = request.JobName, message = "Job iniciado com sucesso" });
         }
 
@@ -67,7 +73,53 @@ namespace EtlMonitor.Api.Controllers
                 return BadRequest(new { message = "Status é obrigatório" });
 
             await _repository.UpdateJobExecutionAsync(id, request.Status, request.ErrorMessage);
+            
+            _logger.LogInformation("Job finalizado | ExecutionId: {ExecutionId} | Status: {Status}", 
+                id, request.Status);
+            
+            if (request.Status == "Falha")
+            {
+                _logger.LogWarning("Job falhou | ExecutionId: {ExecutionId} | Erro: {ErrorMessage}", 
+                    id, request.ErrorMessage);
+            }
+            
             return Ok(new { executionId = id, message = "Job finalizado com sucesso" });
+        }
+
+        // GET: api/jobs/{id}/details
+        [HttpGet("{id}/details")]
+        public async Task<IActionResult> GetJobDetails(long id)
+        {
+            var details = await _repository.GetExecutionDetailsByExecutionIdAsync(id);
+            return Ok(new { executionId = id, steps = details, count = details.Count() });
+        }
+
+        // POST: api/jobs/{id}/details/start
+        [HttpPost("{id}/details/start")]
+        public async Task<IActionResult> StartJobStep(long id, [FromBody] CreateJobExecutionDetailRequest request)
+        {
+            var detailId = await _repository.CreateJobExecutionDetailAsync(
+                id, 
+                request.StepName, 
+                request.StepOrder, 
+                request.StepMessage);
+
+            _logger.LogInformation("Step iniciado | ExecutionId: {ExecutionId} | Step: {StepName} | Order: {StepOrder}", 
+                id, request.StepName, request.StepOrder);
+
+            return Ok(new { detailId, executionId = id, stepName = request.StepName, message = "Step iniciado com sucesso" });
+        }
+
+        // POST: api/jobs/details/{detailId}/finish
+        [HttpPost("details/{detailId}/finish")]
+        public async Task<IActionResult> FinishJobStep(long detailId, [FromBody] UpdateJobExecutionDetailRequest request)
+        {
+            await _repository.UpdateJobExecutionDetailAsync(detailId, request.StepStatus, request.StepMessage);
+
+            _logger.LogInformation("Step finalizado | DetailId: {DetailId} | Status: {StepStatus}", 
+                detailId, request.StepStatus);
+
+            return Ok(new { detailId, message = "Step finalizado com sucesso" });
         }
 
         // GET: api/jobs/statistics
@@ -126,17 +178,5 @@ namespace EtlMonitor.Api.Controllers
             var successRate = await _repository.GetJobSuccessRateAsync(jobName, startDate, endDate);
             return Ok(new { jobName, successRate, period = new { startDate, endDate } });
         }
-    }
-
-    // Request models
-    public class StartJobRequest
-    {
-        public string JobName { get; set; } = string.Empty;
-    }
-
-    public class FinishJobRequest
-    {
-        public string Status { get; set; } = string.Empty;
-        public string? ErrorMessage { get; set; }
     }
 }

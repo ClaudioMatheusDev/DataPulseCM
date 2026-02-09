@@ -26,5 +26,10 @@ namespace EtlMonitoring.Core.Core.Interfaces
         Task<JobExecution?> GetLastExecutionByJobNameAsync(string jobName);
         Task<IEnumerable<JobExecution>> GetExecutionHistoryByJobNameAsync(string jobName, int limit = 50);
         Task<decimal> GetJobSuccessRateAsync(string jobName, DateTime? startDate = null, DateTime? endDate = null);
+        
+        // Job Execution Details (Steps)
+        Task<long> CreateJobExecutionDetailAsync(long executionId, string stepName, int stepOrder, string? stepMessage = null);
+        Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null);
+        Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId);
     }
 }
