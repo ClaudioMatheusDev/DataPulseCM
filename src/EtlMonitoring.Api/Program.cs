@@ -106,6 +106,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
+
 // Adicionar Request Logging do Serilog
 app.UseSerilogRequestLogging(options =>
 {
@@ -120,9 +122,7 @@ app.UseSerilogRequestLogging(options =>
 });
 
 app.UseHttpsRedirection();
-app.UseCors("AllowAll");
 
-// Mapear Health Checks
 // Mapear Health Checks
 app.MapHealthChecks("/health");
 
