@@ -7,6 +7,10 @@ Sistema de monitoramento centralizado para jobs de ETL, oferecendo visibilidade 
 ![SQL Server](https://img.shields.io/badge/SQL%20Server-2019+-red)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
+
+<img width="935" height="684" alt="image" src="https://github.com/user-attachments/assets/beb718d8-f021-4bc9-827f-91a8fa0c3151" />
+
+
 ## 🎯 Objetivo
 
 Centralizar informações sobre a execução de jobs de ETL, aumentando a visibilidade e facilitando a análise de falhas através de:
