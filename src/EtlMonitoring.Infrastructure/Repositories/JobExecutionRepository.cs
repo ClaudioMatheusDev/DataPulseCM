@@ -287,5 +287,71 @@ namespace EtlMonitoring.Infrastructure.Repositories
             var result = await connection.ExecuteScalarAsync<decimal>(sql, new { JobName = jobName, StartDate = startDate, EndDate = endDate });
             return result;
         }
+
+        // Job Execution Details (Steps)
+        public async Task<long> CreateJobExecutionDetailAsync(long executionId, string stepName, int stepOrder, string? stepMessage = null)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            var sql = @"
+                INSERT INTO [dbo].[ETL_JobExecutionDetails] 
+                (ExecutionId, StepName, StepOrder, StepStatus, StepMessage, StartDateTime)
+                VALUES (@ExecutionId, @StepName, @StepOrder, 'EmExecucao', @StepMessage, GETUTCDATE());
+                
+                SELECT CAST(SCOPE_IDENTITY() as bigint);";
+
+            var detailId = await connection.ExecuteScalarAsync<long>(sql, new 
+            { 
+                ExecutionId = executionId,
+                StepName = stepName,
+                StepOrder = stepOrder,
+                StepMessage = stepMessage
+            });
+
+            return detailId;
+        }
+
+        public async Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            var sql = @"
+                UPDATE [dbo].[ETL_JobExecutionDetails]
+                SET 
+                    EndDateTime = GETUTCDATE(),
+                    StepStatus = @StepStatus,
+                    StepMessage = COALESCE(@StepMessage, StepMessage)
+                WHERE DetailId = @DetailId";
+
+            await connection.ExecuteAsync(sql, new 
+            { 
+                DetailId = detailId,
+                StepStatus = stepStatus,
+                StepMessage = stepMessage
+            });
+        }
+
+        public async Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId)
+        {
+            using var connection = new SqlConnection(_connectionString);
+
+            var sql = @"
+                SELECT 
+                    DetailId,
+                    ExecutionId,
+                    StepName,
+                    StepOrder,
+                    StepStatus,
+                    StepMessage,
+                    StartDateTime,
+                    EndDateTime,
+                    CreatedAt
+                FROM [dbo].[ETL_JobExecutionDetails]
+                WHERE ExecutionId = @ExecutionId
+                ORDER BY StepOrder ASC";
+
+            var result = await connection.QueryAsync<JobExecutionDetail>(sql, new { ExecutionId = executionId });
+            return result;
+        }
     }
 }

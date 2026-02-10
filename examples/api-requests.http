@@ -1,0 +1,396 @@
+### ===========================================
+### EXEMPLOS DE USO - DataPulseCM API
+### Sistema de Logging Profissional para ETL
+### ===========================================
+
+@baseUrl = http://localhost:5000
+@executionId = 0
+@detailId = 0
+
+### ===========================================
+### HEALTH CHECK
+### ===========================================
+
+### Health Check
+GET {{baseUrl}}/health
+
+### ===========================================
+### EXEMPLO 1: JOB SIMPLES (SEM STEPS)
+### ===========================================
+
+### 1.1 - Iniciar Job Simples
+# @name startSimpleJob
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": "ImportarClientes"
+}
+
+### 1.2 - Finalizar Job com Sucesso
+# Copie o executionId da resposta acima
+POST {{baseUrl}}/api/jobs/1/finish
+Content-Type: application/json
+
+{
+  "status": "Sucesso",
+  "errorMessage": null
+}
+
+### 1.3 - Consultar Job
+GET {{baseUrl}}/api/jobs/1
+
+### ===========================================
+### EXEMPLO 2: JOB COMPLETO COM STEPS (RECOMENDADO)
+### ===========================================
+
+### 2.1 - Iniciar Job Principal
+# @name startJobWithSteps
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": "ETL_Vendas_Completo"
+}
+
+### 2.2 - Step 1: Extract - Iniciar
+# @name startExtractStep
+POST {{baseUrl}}/api/jobs/2/details/start
+Content-Type: application/json
+
+{
+  "executionId": 2,
+  "stepName": "Extract - SQL Server Origem",
+  "stepOrder": 1,
+  "stepMessage": "Iniciando extração de 100.000 registros da tabela Vendas"
+}
+
+### 2.3 - Step 1: Extract - Finalizar
+POST {{baseUrl}}/api/jobs/details/1/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "Extraídos 100.523 registros em 45.2 segundos"
+}
+
+### 2.4 - Step 2: Transform - Iniciar
+# @name startTransformStep
+POST {{baseUrl}}/api/jobs/2/details/start
+Content-Type: application/json
+
+{
+  "executionId": 2,
+  "stepName": "Transform - Limpeza e Validação",
+  "stepOrder": 2,
+  "stepMessage": "Aplicando regras de negócio e validações de qualidade"
+}
+
+### 2.5 - Step 2: Transform - Finalizar
+POST {{baseUrl}}/api/jobs/details/2/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "98.520 registros válidos | 2.003 registros rejeitados (2% rejeição)"
+}
+
+### 2.6 - Step 3: Load - Iniciar
+# @name startLoadStep
+POST {{baseUrl}}/api/jobs/2/details/start
+Content-Type: application/json
+
+{
+  "executionId": 2,
+  "stepName": "Load - Inserção no Data Warehouse",
+  "stepOrder": 3,
+  "stepMessage": "Carregando dados no DW em lote de 1000 registros"
+}
+
+### 2.7 - Step 3: Load - Finalizar
+POST {{baseUrl}}/api/jobs/details/3/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "98.520 registros inseridos com sucesso | Tempo: 32.1s"
+}
+
+### 2.8 - Step 4: Validate - Iniciar
+# @name startValidateStep
+POST {{baseUrl}}/api/jobs/2/details/start
+Content-Type: application/json
+
+{
+  "executionId": 2,
+  "stepName": "Validate - Verificação de Integridade",
+  "stepOrder": 4,
+  "stepMessage": "Validando contagem e integridade referencial"
+}
+
+### 2.9 - Step 4: Validate - Finalizar
+POST {{baseUrl}}/api/jobs/details/4/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "Validação concluída: Dados íntegros | Quality Score: 98.5%"
+}
+
+### 2.10 - Finalizar Job Principal
+POST {{baseUrl}}/api/jobs/2/finish
+Content-Type: application/json
+
+{
+  "status": "Sucesso"
+}
+
+### 2.11 - Consultar Todos os Steps
+GET {{baseUrl}}/api/jobs/2/details
+
+### ===========================================
+### EXEMPLO 3: JOB COM FALHA
+### ===========================================
+
+### 3.1 - Iniciar Job
+# @name startFailedJob
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": "ImportarProdutos"
+}
+
+### 3.2 - Step que vai falhar
+# @name startFailingStep
+POST {{baseUrl}}/api/jobs/3/details/start
+Content-Type: application/json
+
+{
+  "executionId": 3,
+  "stepName": "Extract - API Externa",
+  "stepOrder": 1,
+  "stepMessage": "Conectando à API de produtos"
+}
+
+### 3.3 - Finalizar Step com Falha
+POST {{baseUrl}}/api/jobs/details/5/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Falha",
+  "stepMessage": "Timeout ao conectar na API externa após 30s | Endpoint: https://api.exemplo.com/produtos"
+}
+
+### 3.4 - Finalizar Job com Falha
+POST {{baseUrl}}/api/jobs/3/finish
+Content-Type: application/json
+
+{
+  "status": "Falha",
+  "errorMessage": "Falha no step Extract - Timeout na API externa"
+}
+
+### ===========================================
+### EXEMPLO 4: FILTROS E CONSULTAS
+### ===========================================
+
+### 4.1 - Listar Jobs Recentes (últimos 10)
+GET {{baseUrl}}/api/jobs?limit=10
+
+### 4.2 - Filtrar Jobs por Status
+GET {{baseUrl}}/api/jobs/filter?status=Sucesso&limite=20
+
+### 4.3 - Filtrar Jobs por Nome
+GET {{baseUrl}}/api/jobs/filter?jobName=ETL_Vendas
+
+### 4.4 - Filtrar Jobs por Período
+GET {{baseUrl}}/api/jobs/filter?startDate=2026-02-01&endDate=2026-02-09&limite=50
+
+### 4.5 - Jobs Falhados
+GET {{baseUrl}}/api/jobs/failed?limit=20
+
+### ===========================================
+### EXEMPLO 5: ESTATÍSTICAS
+### ===========================================
+
+### 5.1 - Estatísticas Gerais
+GET {{baseUrl}}/api/jobs/statistics
+
+### 5.2 - Estatísticas por Período
+GET {{baseUrl}}/api/jobs/statistics?startDate=2026-02-01&endDate=2026-02-09
+
+### ===========================================
+### EXEMPLO 6: CONSULTAS POR JOB ESPECÍFICO
+### ===========================================
+
+### 6.1 - Última Execução de um Job
+GET {{baseUrl}}/api/jobs/by-name/ETL_Vendas_Completo
+
+### 6.2 - Histórico de Execuções de um Job
+GET {{baseUrl}}/api/jobs/by-name/ETL_Vendas_Completo/history?limit=20
+
+### 6.3 - Taxa de Sucesso de um Job
+GET {{baseUrl}}/api/jobs/by-name/ETL_Vendas_Completo/success-rate
+
+### 6.4 - Taxa de Sucesso por Período
+GET {{baseUrl}}/api/jobs/by-name/ETL_Vendas_Completo/success-rate?startDate=2026-01-01&endDate=2026-01-31
+
+### ===========================================
+### EXEMPLO 7: TESTES DE VALIDAÇÃO
+### ===========================================
+
+### 7.1 - Teste: JobName vazio (deve falhar - 400)
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": ""
+}
+
+### 7.2 - Teste: JobName com caracteres inválidos (deve falhar - 400)
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": "Job@Invalido#123"
+}
+
+### 7.3 - Teste: Status inválido (deve falhar - 400)
+POST {{baseUrl}}/api/jobs/1/finish
+Content-Type: application/json
+
+{
+  "status": "StatusInvalido"
+}
+
+### 7.4 - Teste: Limite inválido (deve falhar - 400)
+GET {{baseUrl}}/api/jobs/filter?limite=5000
+
+### ===========================================
+### EXEMPLO 8: CENÁRIO REAL - PIPELINE COMPLETO
+### ===========================================
+
+### 8.1 - Pipeline: Iniciar Job
+# @name pipelineStart
+POST {{baseUrl}}/api/jobs/start
+Content-Type: application/json
+
+{
+  "jobName": "Pipeline_Diario_Vendas"
+}
+
+### 8.2 - Pipeline: Extract Vendas
+POST {{baseUrl}}/api/jobs/4/details/start
+Content-Type: application/json
+
+{
+  "executionId": 4,
+  "stepName": "Extract - Vendas ERP",
+  "stepOrder": 1,
+  "stepMessage": "Extraindo vendas das últimas 24h"
+}
+
+###
+POST {{baseUrl}}/api/jobs/details/6/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "Extraídos 15.234 registros"
+}
+
+### 8.3 - Pipeline: Extract Clientes
+POST {{baseUrl}}/api/jobs/4/details/start
+Content-Type: application/json
+
+{
+  "executionId": 4,
+  "stepName": "Extract - Clientes CRM",
+  "stepOrder": 2,
+  "stepMessage": "Extraindo dados de clientes"
+}
+
+###
+POST {{baseUrl}}/api/jobs/details/7/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "Extraídos 8.521 registros de clientes"
+}
+
+### 8.4 - Pipeline: Transform e Enrich
+POST {{baseUrl}}/api/jobs/4/details/start
+Content-Type: application/json
+
+{
+  "executionId": 4,
+  "stepName": "Transform - Enriquecimento de Dados",
+  "stepOrder": 3,
+  "stepMessage": "Cruzando vendas com clientes e calculando métricas"
+}
+
+###
+POST {{baseUrl}}/api/jobs/details/8/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "15.234 vendas enriquecidas | 98.5% match com clientes"
+}
+
+### 8.5 - Pipeline: Load DW
+POST {{baseUrl}}/api/jobs/4/details/start
+Content-Type: application/json
+
+{
+  "executionId": 4,
+  "stepName": "Load - Data Warehouse",
+  "stepOrder": 4,
+  "stepMessage": "Carregando fatos e dimensões"
+}
+
+###
+POST {{baseUrl}}/api/jobs/details/9/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "15.234 fatos inseridos | 345 dimensões atualizadas"
+}
+
+### 8.6 - Pipeline: Atualizar Agregações
+POST {{baseUrl}}/api/jobs/4/details/start
+Content-Type: application/json
+
+{
+  "executionId": 4,
+  "stepName": "Aggregate - Refresh Cubos",
+  "stepOrder": 5,
+  "stepMessage": "Atualizando cubos OLAP"
+}
+
+###
+POST {{baseUrl}}/api/jobs/details/10/finish
+Content-Type: application/json
+
+{
+  "stepStatus": "Sucesso",
+  "stepMessage": "12 cubos atualizados em 45s"
+}
+
+### 8.7 - Pipeline: Finalizar
+POST {{baseUrl}}/api/jobs/4/finish
+Content-Type: application/json
+
+{
+  "status": "Sucesso"
+}
+
+### 8.8 - Pipeline: Ver Todos Steps
+GET {{baseUrl}}/api/jobs/4/details
+
+### ===========================================
+### FIM DOS EXEMPLOS
+### ===========================================
