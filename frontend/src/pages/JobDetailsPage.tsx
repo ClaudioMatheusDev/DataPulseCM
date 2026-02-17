@@ -19,8 +19,6 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import StatusBadge from '../components/Common/StatusBadge';
@@ -132,7 +130,7 @@ export default function JobDetailsPage() {
               {job.jobName}
             </Typography>
             <Typography variant="caption" color="textSecondary">
-              Execução ID: #{job.executionID}
+              Execução ID: #{job.executionId}
             </Typography>
           </Box>
           <StatusBadge status={job.status} />
@@ -142,54 +140,78 @@ export default function JobDetailsPage() {
 
         {/* Informações Gerais */}
         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-          {formatDate(job.startDate) !== '-' && (
+          {formatDate(job.startDateTime) !== '-' && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Data de Início
               </Typography>
               <Typography variant="body1" fontWeight="medium">
                 <AccessTimeIcon sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'middle' }} />
-                {formatDate(job.startDate)}
+                {formatDate(job.startDateTime)}
               </Typography>
             </Box>
           )}
 
-          {job.endDate && formatDate(job.endDate) !== '-' && (
+          {job.endDateTime && formatDate(job.endDateTime) !== '-' && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Data de Término
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {formatDate(job.endDate)}
+                {formatDate(job.endDateTime)}
               </Typography>
             </Box>
           )}
 
-          {(job.duration || calculateDuration(job.startDate, job.endDate)) && (
+          {(job.executionDurationMs || calculateDuration(job.startDateTime, job.endDateTime)) && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Duração Total
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {formatDuration(job.duration || calculateDuration(job.startDate, job.endDate) || 0)}
+                {job.executionDurationMs 
+                  ? formatDuration(Math.floor(job.executionDurationMs / 1000))
+                  : formatDuration(calculateDuration(job.startDateTime, job.endDateTime) || 0)}
               </Typography>
             </Box>
           )}
 
-          {job.recordsProcessed !== undefined && job.recordsProcessed !== null && job.recordsProcessed > 0 && (
+          {job.rowsProcessed !== undefined && job.rowsProcessed !== null && job.rowsProcessed > 0 && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Registros Processados
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {job.recordsProcessed.toLocaleString()}
+                {job.rowsProcessed.toLocaleString()}
+              </Typography>
+            </Box>
+          )}
+
+          {job.rowsInserted !== undefined && job.rowsInserted !== null && job.rowsInserted > 0 && (
+            <Box>
+              <Typography variant="caption" color="textSecondary" display="block">
+                Inseridos
+              </Typography>
+              <Typography variant="body1" fontWeight="medium" color="success.main">
+                {job.rowsInserted.toLocaleString()}
+              </Typography>
+            </Box>
+          )}
+
+          {job.rowsUpdated !== undefined && job.rowsUpdated !== null && job.rowsUpdated > 0 && (
+            <Box>
+              <Typography variant="caption" color="textSecondary" display="block">
+                Atualizados
+              </Typography>
+              <Typography variant="body1" fontWeight="medium" color="primary.main">
+                {job.rowsUpdated.toLocaleString()}
               </Typography>
             </Box>
           )}
         </Box>
 
         {/* Informação adicional quando não há dados de execução */}
-        {formatDate(job.startDate) === '-' && (
+        {formatDate(job.startDateTime) === '-' && (
           <Alert severity="info" sx={{ mt: 2 }}>
             Esta execução ainda não possui informações de data e hora registradas.
           </Alert>
@@ -245,16 +267,18 @@ export default function JobDetailsPage() {
                   <TableCell><strong>Ordem</strong></TableCell>
                   <TableCell><strong>Nome do Step</strong></TableCell>
                   <TableCell><strong>Status</strong></TableCell>
-                  <TableCell><strong>Início</strong></TableCell>
                   <TableCell><strong>Duração</strong></TableCell>
-                  <TableCell><strong>Registros</strong></TableCell>
+                  <TableCell align="right"><strong>Processados</strong></TableCell>
+                  <TableCell align="right"><strong>Inseridos</strong></TableCell>
+                  <TableCell align="right"><strong>Atualizados</strong></TableCell>
+                  <TableCell align="center"><strong>Progresso</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {details
                   .sort((a, b) => a.stepOrder - b.stepOrder)
                   .map((detail) => (
-                    <TableRow key={detail.detailId}>
+                    <TableRow key={detail.detailId} hover>
                       <TableCell>
                         <Chip label={detail.stepOrder} size="small" variant="outlined" />
                       </TableCell>
@@ -262,26 +286,88 @@ export default function JobDetailsPage() {
                         <Typography variant="body2" fontWeight="medium">
                           {detail.stepName}
                         </Typography>
-                        {detail.errorMessage && (
-                          <Typography variant="caption" color="error" display="block">
-                            {detail.errorMessage}
+                        {detail.stepMessage && detail.stepStatus === 'Falha' && (
+                          <Typography variant="caption" color="error" display="block" sx={{ mt: 0.5 }}>
+                            ⚠️ {detail.stepMessage}
                           </Typography>
                         )}
+                        {detail.stepMessage && detail.stepStatus !== 'Falha' && (
+                          <Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5 }}>
+                            {detail.stepMessage}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" color="textSecondary" display="block" sx={{ mt: 0.5 }}>
+                          {formatDate(detail.startDateTime)}
+                        </Typography>
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={detail.status} />
-                      </TableCell>
-                      <TableCell>{formatDate(detail.startTime)}</TableCell>
-                      <TableCell>
-                        {formatDuration(calculateDuration(detail.startTime, detail.endTime) || 0)}
+                        <StatusBadge status={detail.stepStatus} />
                       </TableCell>
                       <TableCell>
-                        {detail.recordsProcessed ? (
+                        {detail.durationInSeconds !== undefined && detail.durationInSeconds !== null
+                          ? formatDuration(Math.floor(detail.durationInSeconds))
+                          : calculateDuration(detail.startDateTime, detail.endDateTime)
+                          ? formatDuration(calculateDuration(detail.startDateTime, detail.endDateTime) || 0)
+                          : '-'}
+                      </TableCell>
+                      <TableCell align="right">
+                        {detail.rowsProcessed ? (
                           <Chip 
-                            label={detail.recordsProcessed.toLocaleString()} 
+                            label={detail.rowsProcessed.toLocaleString()} 
                             size="small" 
-                            variant="outlined" 
+                            color="default"
                           />
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        {detail.rowsInserted ? (
+                          <Chip 
+                            label={detail.rowsInserted.toLocaleString()} 
+                            size="small" 
+                            color="success"
+                          />
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        {detail.rowsUpdated ? (
+                          <Chip 
+                            label={detail.rowsUpdated.toLocaleString()} 
+                            size="small" 
+                            color="primary"
+                          />
+                        ) : (
+                          '-'
+                        )}
+                      </TableCell>
+                      <TableCell align="center">
+                        {detail.progressPercentage !== undefined && detail.progressPercentage !== null ? (
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Box
+                              sx={{
+                                width: 50,
+                                height: 8,
+                                backgroundColor: '#e0e0e0',
+                                borderRadius: 1,
+                                overflow: 'hidden',
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  width: `${detail.progressPercentage}%`,
+                                  height: '100%',
+                                  backgroundColor: detail.progressPercentage === 100 ? '#4caf50' : '#2196f3',
+                                  transition: 'width 0.3s',
+                                }}
+                              />
+                            </Box>
+                            <Typography variant="caption" sx={{ minWidth: 35 }}>
+                              {detail.progressPercentage.toFixed(0)}%
+                            </Typography>
+                          </Box>
                         ) : (
                           '-'
                         )}

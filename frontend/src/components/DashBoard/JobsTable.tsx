@@ -79,15 +79,15 @@ export default function JobsTable({ jobs }: JobsTableProps) {
           ) : (
             jobs.map((job) => (
               <TableRow 
-                key={job.executionID}
+                key={job.executionId}
                 hover
-                onClick={() => navigate(`/job/${job.executionID}`)}
+                onClick={() => navigate(`/job/${job.executionId}`)}
                 sx={{ 
                   '&:hover': { backgroundColor: '#f5f5f5', cursor: 'pointer' },
                   transition: 'background-color 0.2s'
                 }}
               >
-                <TableCell>{job.executionID}</TableCell>
+                <TableCell>{job.executionId}</TableCell>
                 <TableCell>
                   <Typography variant="body2" fontWeight="medium">
                     {job.jobName}
@@ -98,22 +98,24 @@ export default function JobsTable({ jobs }: JobsTableProps) {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {formatDate(job.startDate)}
+                    {formatDate(job.startDateTime)}
                   </Typography>
-                  {job.endDate && formatDate(job.endDate) !== '-' && (
+                  {job.endDateTime && formatDate(job.endDateTime) !== '-' && (
                     <Typography variant="caption" color="textSecondary" display="block">
-                      até {formatDate(job.endDate).split(' ')[0]}
+                      até {formatDate(job.endDateTime).split(' ')[0]}
                     </Typography>
                   )}
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {formatDuration(job.duration || calculateDuration(job.startDate, job.endDate) || 0)}
+                    {job.executionDurationMs 
+                      ? formatDuration(Math.floor(job.executionDurationMs / 1000))
+                      : formatDuration(calculateDuration(job.startDateTime, job.endDateTime) || 0)}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  {job.recordsProcessed && job.recordsProcessed > 0 ? (
-                    <Chip label={job.recordsProcessed.toLocaleString()} size="small" variant="outlined" />
+                  {job.rowsProcessed && job.rowsProcessed > 0 ? (
+                    <Chip label={job.rowsProcessed.toLocaleString()} size="small" variant="outlined" />
                   ) : (
                     <Typography variant="body2" color="textSecondary">-</Typography>
                   )}

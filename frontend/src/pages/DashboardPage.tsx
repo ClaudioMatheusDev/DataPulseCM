@@ -35,10 +35,12 @@ export default function DashboardPage() {
       
       let errorMessage = 'Falha ao carregar dados do dashboard.';
       
-      if (err.code === 'ERR_NETWORK') {
+      // Type guard para axios error
+      if (err && typeof err === 'object' && 'code' in err && err.code === 'ERR_NETWORK') {
         errorMessage = 'Erro de rede. Verifique se a API está rodando em http://localhost:5105';
-      } else if (err.response) {
-        errorMessage = `Erro na API: ${err.response.status} - ${err.response.statusText}`;
+      } else if (err && typeof err === 'object' && 'response' in err) {
+        const axiosError = err as { response: { status: number; statusText: string } };
+        errorMessage = `Erro na API: ${axiosError.response.status} - ${axiosError.response.statusText}`;
       }
       
       setError(errorMessage);

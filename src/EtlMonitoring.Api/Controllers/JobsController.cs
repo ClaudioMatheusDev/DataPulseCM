@@ -21,11 +21,6 @@ namespace EtlMonitor.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetRecentJobs([FromQuery] int limit = 50)
         {
-            // TODO: Implementar
-            // 1. Chamar repository
-            // 2. Converter para DTO (se necessário)
-            // 3. Retornar Ok(result)
-
             var jobs = await _repository.GetRecentExecutionsAsync(limit);
             return Ok(new { data = jobs, count = jobs.Count() });
         }
@@ -114,12 +109,37 @@ namespace EtlMonitor.Api.Controllers
         [HttpPost("details/{detailId}/finish")]
         public async Task<IActionResult> FinishJobStep(long detailId, [FromBody] UpdateJobExecutionDetailRequest request)
         {
-            await _repository.UpdateJobExecutionDetailAsync(detailId, request.StepStatus, request.StepMessage);
+            await _repository.UpdateJobExecutionDetailAsync(
+                detailId,
+                request.StepStatus,
+                request.StepMessage,
+                request.RowsProcessed,
+                request.RowsInserted,
+                request.RowsUpdated,
+                request.RowsDeleted,
+                request.RowsFailed);
 
-            _logger.LogInformation("Step finalizado | DetailId: {DetailId} | Status: {StepStatus}", 
-                detailId, request.StepStatus);
+            _logger.LogInformation(
+                "Step finalizado | DetailId: {DetailId} | Status: {StepStatus} | Rows: {RowsProcessed}",
+                detailId, request.StepStatus, request.RowsProcessed ?? 0);
 
             return Ok(new { detailId, message = "Step finalizado com sucesso" });
+        }
+
+        [HttpPut("details/{detailId}/progress")]
+        public async Task<IActionResult> UpdateStepProgress(long detailId, [FromBody] UpdateStepProgressRequest request)
+        {
+            await _repository.UpdateStepProgressAsync(
+                detailId,
+                request.RowsProcessed,
+                request.ProgressPercentage,
+                request.StepMessage);
+
+            _logger.LogDebug(
+                "Progresso atualizado | DetailId: {DetailId} | Progress: {Progress}% | Rows: {Rows}",
+                detailId, request.ProgressPercentage, request.RowsProcessed);
+
+            return Ok(new { detailId, progress = request.ProgressPercentage, message = "Progresso atualizado" });
         }
 
         // GET: api/jobs/statistics

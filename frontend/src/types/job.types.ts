@@ -1,12 +1,18 @@
 export interface JobExecution {
-  executionID: number;
+  executionId: number;
   jobName: string;
   status: string;
-  startDate: string;
-  endDate?: string;
-  duration?: number;
+  startDateTime: string;
+  endDateTime?: string;
+  executionDurationMs?: number;
   errorMessage?: string;
-  recordsProcessed?: number;
+  rowsProcessed?: number;
+  rowsInserted?: number;
+  rowsUpdated?: number;
+  rowsDeleted?: number;
+  serverName?: string;
+  databaseName?: string;
+  createdAt?: string;
 }
 
 export interface Statistics {
@@ -14,7 +20,7 @@ export interface Statistics {
   successful: number;
   failed: number;
   successRate: number;
-  byStatus?: unknown[];
+  byStatus?: Record<string, number>;
   period?: {
     startDate?: string;
     endDate?: string;
@@ -26,10 +32,17 @@ export interface JobExecutionDetail {
   executionId: number;
   stepName: string;
   stepOrder: number;
-  status: string;
-  startTime: string;
-  endTime?: string;
-  recordsProcessed?: number;
-  errorMessage?: string;
+  stepStatus: string;
   stepMessage?: string;
+  startDateTime: string;
+  endDateTime?: string;
+  rowsProcessed?: number;
+  rowsInserted?: number;
+  rowsUpdated?: number;
+  rowsDeleted?: number;
+  rowsFailed?: number;
+  progressPercentage?: number;
+  durationInSeconds?: number;
+  durationInMilliseconds?: number;
+  createdAt?: string;
 }

@@ -29,7 +29,8 @@ namespace EtlMonitoring.Core.Core.Interfaces
         
         // Job Execution Details (Steps)
         Task<long> CreateJobExecutionDetailAsync(long executionId, string stepName, int stepOrder, string? stepMessage = null);
-        Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null);
+        Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null, int? rowsProcessed = null, int? rowsInserted = null, int? rowsUpdated = null, int? rowsDeleted = null, int? rowsFailed = null);
+         Task UpdateStepProgressAsync(long detailId, int? rowsProcessed = null, decimal? progressPercentage = null, string? stepMessage = null);
         Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId);
     }
 }

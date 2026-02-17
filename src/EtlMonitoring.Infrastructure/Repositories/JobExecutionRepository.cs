@@ -311,47 +311,97 @@ namespace EtlMonitoring.Infrastructure.Repositories
             return detailId;
         }
 
-        public async Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null)
-        {
-            using var connection = new SqlConnection(_connectionString);
+public async Task UpdateJobExecutionDetailAsync(
+    long detailId, 
+    string stepStatus, 
+    string? stepMessage = null,
+    int? rowsProcessed = null,
+    int? rowsInserted = null,
+    int? rowsUpdated = null,
+    int? rowsDeleted = null,
+    int? rowsFailed = null)
+{
+    using var connection = new SqlConnection(_connectionString);
 
-            var sql = @"
-                UPDATE [dbo].[ETL_JobExecutionDetails]
-                SET 
-                    EndDateTime = GETUTCDATE(),
-                    StepStatus = @StepStatus,
-                    StepMessage = COALESCE(@StepMessage, StepMessage)
-                WHERE DetailId = @DetailId";
+    var sql = @"
+        UPDATE [dbo].[ETL_JobExecutionDetails]
+        SET 
+            EndDateTime = GETUTCDATE(),
+            StepStatus = @StepStatus,
+            StepMessage = COALESCE(@StepMessage, StepMessage),
+            RowsProcessed = COALESCE(@RowsProcessed, RowsProcessed),
+            RowsInserted = COALESCE(@RowsInserted, RowsInserted),
+            RowsUpdated = COALESCE(@RowsUpdated, RowsUpdated),
+            RowsDeleted = COALESCE(@RowsDeleted, RowsDeleted),
+            RowsFailed = COALESCE(@RowsFailed, RowsFailed),
+            ProgressPercentage = 100.00
+        WHERE DetailId = @DetailId";
 
-            await connection.ExecuteAsync(sql, new 
-            { 
-                DetailId = detailId,
-                StepStatus = stepStatus,
-                StepMessage = stepMessage
-            });
-        }
+    await connection.ExecuteAsync(sql, new 
+    { 
+        DetailId = detailId,
+        StepStatus = stepStatus,
+        StepMessage = stepMessage,
+        RowsProcessed = rowsProcessed,
+        RowsInserted = rowsInserted,
+        RowsUpdated = rowsUpdated,
+        RowsDeleted = rowsDeleted,
+        RowsFailed = rowsFailed
+    });
+}
 
-        public async Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId)
-        {
-            using var connection = new SqlConnection(_connectionString);
+public async Task UpdateStepProgressAsync(
+    long detailId,
+    int? rowsProcessed = null,
+    decimal? progressPercentage = null,
+    string? stepMessage = null)
+{
+    using var connection = new SqlConnection(_connectionString);
 
-            var sql = @"
-                SELECT 
-                    DetailId,
-                    ExecutionId,
-                    StepName,
-                    StepOrder,
-                    StepStatus,
-                    StepMessage,
-                    StartDateTime,
-                    EndDateTime,
-                    CreatedAt
-                FROM [dbo].[ETL_JobExecutionDetails]
-                WHERE ExecutionId = @ExecutionId
-                ORDER BY StepOrder ASC";
+    var sql = @"
+        UPDATE [dbo].[ETL_JobExecutionDetails]
+        SET 
+            RowsProcessed = COALESCE(@RowsProcessed, RowsProcessed),
+            ProgressPercentage = COALESCE(@ProgressPercentage, ProgressPercentage),
+            StepMessage = COALESCE(@StepMessage, StepMessage)
+        WHERE DetailId = @DetailId";
 
-            var result = await connection.QueryAsync<JobExecutionDetail>(sql, new { ExecutionId = executionId });
-            return result;
-        }
+    await connection.ExecuteAsync(sql, new 
+    { 
+        DetailId = detailId,
+        RowsProcessed = rowsProcessed,
+        ProgressPercentage = progressPercentage,
+        StepMessage = stepMessage
+    });
+}
+
+public async Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId)
+{
+    using var connection = new SqlConnection(_connectionString);
+
+    var sql = @"
+        SELECT 
+            DetailId,
+            ExecutionId,
+            StepName,
+            StepOrder,
+            StepStatus,
+            StepMessage,
+            StartDateTime,
+            EndDateTime,
+            CreatedAt,
+            RowsProcessed,
+            RowsInserted,
+            RowsUpdated,
+            RowsDeleted,
+            RowsFailed,
+            ProgressPercentage
+        FROM [dbo].[ETL_JobExecutionDetails]
+        WHERE ExecutionId = @ExecutionId
+        ORDER BY StepOrder ASC";
+
+    var result = await connection.QueryAsync<JobExecutionDetail>(sql, new { ExecutionId = executionId });
+    return result;
+}
     }
 }
