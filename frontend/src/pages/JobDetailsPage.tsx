@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -19,8 +18,6 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ErrorIcon from '@mui/icons-material/Error';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import StatusBadge from '../components/Common/StatusBadge';
@@ -165,24 +162,28 @@ export default function JobDetailsPage() {
             </Box>
           )}
 
-          {(job.duration || calculateDuration(job.startDate, job.endDate)) && (
+          {(job.executionDurationMs || calculateDuration(job.startDate, job.endDate)) && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Duração Total
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {formatDuration(job.duration || calculateDuration(job.startDate, job.endDate) || 0)}
+                {formatDuration(
+                  job.executionDurationMs
+                    ? Math.round(job.executionDurationMs / 1000)
+                    : calculateDuration(job.startDate, job.endDate) || 0
+                )}
               </Typography>
             </Box>
           )}
 
-          {job.recordsProcessed !== undefined && job.recordsProcessed !== null && job.recordsProcessed > 0 && (
+          {job.rowsProcessed !== undefined && job.rowsProcessed !== null && job.rowsProcessed > 0 && (
             <Box>
               <Typography variant="caption" color="textSecondary" display="block">
                 Registros Processados
               </Typography>
               <Typography variant="body1" fontWeight="medium">
-                {job.recordsProcessed.toLocaleString()}
+                {job.rowsProcessed!.toLocaleString()}
               </Typography>
             </Box>
           )}
@@ -262,23 +263,23 @@ export default function JobDetailsPage() {
                         <Typography variant="body2" fontWeight="medium">
                           {detail.stepName}
                         </Typography>
-                        {detail.errorMessage && (
+                        {detail.stepMessage ? (
                           <Typography variant="caption" color="error" display="block">
-                            {detail.errorMessage}
+                            {detail.stepMessage}
                           </Typography>
-                        )}
+                        ) : null}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={detail.status} />
+                        <StatusBadge status={detail.stepStatus} />
                       </TableCell>
-                      <TableCell>{formatDate(detail.startTime)}</TableCell>
+                      <TableCell>{formatDate(detail.startDateTime)}</TableCell>
                       <TableCell>
-                        {formatDuration(calculateDuration(detail.startTime, detail.endTime) || 0)}
+                        {formatDuration(calculateDuration(detail.startDateTime, detail.endDateTime) || 0)}
                       </TableCell>
                       <TableCell>
-                        {detail.recordsProcessed ? (
+                        {detail.durationInSeconds != null ? (
                           <Chip 
-                            label={detail.recordsProcessed.toLocaleString()} 
+                            label={`${detail.durationInSeconds.toFixed(1)}s`}
                             size="small" 
                             variant="outlined" 
                           />

@@ -4,9 +4,19 @@ export interface JobExecution {
   status: string;
   startDate: string;
   endDate?: string;
-  duration?: number;
+  executionDurationMs?: number;
   errorMessage?: string;
-  recordsProcessed?: number;
+  rowsProcessed?: number;
+  rowsInserted?: number;
+  rowsUpdated?: number;
+  rowsDeleted?: number;
+  serverName?: string;
+  databaseName?: string;
+  source?: string;
+  destination?: string;
+  dataQualityScore?: number;
+  correlationId?: string;
+  tags?: string;
 }
 
 export interface Statistics {
@@ -14,7 +24,7 @@ export interface Statistics {
   successful: number;
   failed: number;
   successRate: number;
-  byStatus?: unknown[];
+  byStatus?: Record<string, number>;
   period?: {
     startDate?: string;
     endDate?: string;
@@ -26,10 +36,9 @@ export interface JobExecutionDetail {
   executionId: number;
   stepName: string;
   stepOrder: number;
-  status: string;
-  startTime: string;
-  endTime?: string;
-  recordsProcessed?: number;
-  errorMessage?: string;
+  stepStatus: string;
   stepMessage?: string;
+  startDateTime: string;
+  endDateTime?: string;
+  durationInSeconds?: number;
 }

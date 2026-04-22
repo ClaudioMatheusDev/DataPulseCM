@@ -87,8 +87,8 @@ BEGIN
     SELECT TOP (@Limit)
         ExecutionId,
         JobName,
-        StartDateTime,
-        EndDateTime,
+        StartDateTime AS StartDate,
+        EndDateTime   AS EndDate,
         Status,
         ErrorMessage,
         RowsProcessed,
@@ -109,5 +109,37 @@ BEGIN
 END
 GO
 
-PRINT 'Stored Procedures criadas com sucesso!';
+-- =============================================
+-- usp_ETL_GetJobExecutions
+-- Listagem filtrada para o endpoint GET /api/jobs/filter
+-- =============================================
+IF EXISTS (SELECT * FROM sys.procedures WHERE name = 'usp_ETL_GetJobExecutions')
+    DROP PROCEDURE [dbo].[usp_ETL_GetJobExecutions];
+GO
+
+CREATE PROCEDURE [dbo].[usp_ETL_GetJobExecutions]
+    @JobName  NVARCHAR(200) = NULL,
+    @Status   VARCHAR(20)   = NULL,
+    @StartDate DATETIME2    = NULL,
+    @EndDate   DATETIME2    = NULL,
+    @Limit     INT           = 100
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT TOP (@Limit)
+        ExecutionId,
+        JobName,
+        StartDateTime AS StartDate,
+        EndDateTime   AS EndDate,
+        Status,
+        ErrorMessage
+    FROM [dbo].[ETL_JobExecutionLog]
+    WHERE
+        (@JobName   IS NULL OR JobName LIKE '%' + @JobName + '%')
+        AND (@Status IS NULL OR Status = @Status)
+        AND (@StartDate IS NULL OR StartDateTime >= @StartDate)
+        AND (@EndDate   IS NULL OR StartDateTime <= @EndDate)
+    ORDER BY StartDateTime DESC;
+END
 GO

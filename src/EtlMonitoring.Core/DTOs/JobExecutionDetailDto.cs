@@ -12,7 +12,6 @@ namespace EtlMonitoring.Core.DTOs
 
     public class CreateJobExecutionDetailRequest
     {
-        public long ExecutionId { get; set; }
         public string StepName { get; set; } = string.Empty;
         public int StepOrder { get; set; }
         public string? StepMessage { get; set; }
