@@ -8,7 +8,8 @@ Sistema de monitoramento centralizado para jobs de ETL, oferecendo visibilidade 
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 
-<img width="935" height="684" alt="image" src="https://github.com/user-attachments/assets/beb718d8-f021-4bc9-827f-91a8fa0c3151" />
+<img width="1905" height="710" alt="image" src="https://github.com/user-attachments/assets/abd5acd3-93ee-457e-8c67-15655451bd68" />
+
 
 
 ## 🎯 Objetivo
