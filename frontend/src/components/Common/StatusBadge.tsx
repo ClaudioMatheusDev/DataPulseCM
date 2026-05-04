@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import { Chip } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ErrorIcon from '@mui/icons-material/Error';
@@ -12,7 +13,7 @@ interface StatusBadgeProps {
 export default function StatusBadge({ status }: StatusBadgeProps) {
   const normalizedStatus = status?.toUpperCase() || '';
 
-  let config: { color: 'success' | 'error' | 'warning' | 'info' | 'default'; icon: JSX.Element; label: string };
+  let config: { color: 'success' | 'error' | 'warning' | 'info' | 'default'; icon: ReactElement; label: string };
 
   if (normalizedStatus.includes('SUCESSO') || normalizedStatus === 'SUCCESS') {
     config = { color: 'success', icon: <CheckCircleIcon fontSize="small" />, label: 'Sucesso' };

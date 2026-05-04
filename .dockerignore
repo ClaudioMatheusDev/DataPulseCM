@@ -1,0 +1,28 @@
+# ── .NET ──────────────────────────────────────────────────────────────────────
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/logs/
+**/*.log
+
+# ── Frontend ──────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.cache/
+
+# ── Git / CI ──────────────────────────────────────────────────────────────────
+.git/
+.github/
+.gitignore
+
+# ── Documentação / Exemplos (não necessários na imagem) ───────────────────────
+README.md
+AGENTS.md
+examples/
+database/
+
+# ── Variáveis de ambiente (nunca incluir segredos na imagem) ──────────────────
+.env
+.env.*
+!.env.example

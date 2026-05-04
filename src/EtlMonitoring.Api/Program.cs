@@ -27,7 +27,9 @@ Log.Logger = new LoggerConfiguration()
         outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] [{SourceContext}] {Message:lj} {Properties:j}{NewLine}{Exception}",
         retainedFileCountLimit: 30,
         fileSizeLimitBytes: 10_485_760) // 10MB
-    .WriteTo.Seq("http://localhost:5341", apiKey: "your-seq-api-key-here") // Opcional: Seq para visualização avançada
+    .WriteTo.Seq(
+        serverUrl: Environment.GetEnvironmentVariable("SEQ_URL") ?? "http://localhost:5341",
+        apiKey: Environment.GetEnvironmentVariable("SEQ_API_KEY")) // Configure SEQ_URL e SEQ_API_KEY como variáveis de ambiente
     .CreateLogger();
 
 try
@@ -127,6 +129,14 @@ if (!app.Environment.IsDevelopment())
 }
 
 // Mapear Health Checks
+// /health/live → apenas verifica se o processo está vivo (sem checar DB) — usado pelo docker healthcheck
+app.MapHealthChecks("/health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // não executa nenhum check, retorna sempre 200
+});
+// /health/ready → checa todas as dependências (DB, etc.)
+app.MapHealthChecks("/health/ready");
+// /health → compatibilidade retroativa
 app.MapHealthChecks("/health");
 
 app.UseAuthorization();
