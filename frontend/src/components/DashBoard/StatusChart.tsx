@@ -43,8 +43,8 @@ export default function StatusChart({ byStatus }: StatusChartProps) {
             <XAxis dataKey="status" tick={{ fontSize: 13 }} />
             <YAxis allowDecimals={false} tick={{ fontSize: 13 }} />
             <Tooltip
-              formatter={(value: number) => [value, 'Execuções']}
-              labelFormatter={(label: string) => `Status: ${label}`}
+              formatter={(value: number | undefined) => [value ?? 0, 'Execuções'] as [number, string]}
+              labelFormatter={(label: unknown) => `Status: ${String(label)}`}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
               {chartData.map((entry, index) => (
