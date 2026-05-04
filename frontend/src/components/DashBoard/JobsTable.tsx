@@ -108,12 +108,14 @@ export default function JobsTable({ jobs }: JobsTableProps) {
                 </TableCell>
                 <TableCell>
                   <Typography variant="body2">
-                    {formatDuration(job.duration || calculateDuration(job.startDate, job.endDate) || 0)}
+                    {formatDuration(job.executionDurationMs
+                      ? Math.round(job.executionDurationMs / 1000)
+                      : calculateDuration(job.startDate, job.endDate) || 0)}
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  {job.recordsProcessed && job.recordsProcessed > 0 ? (
-                    <Chip label={job.recordsProcessed.toLocaleString()} size="small" variant="outlined" />
+                  {job.rowsProcessed && job.rowsProcessed > 0 ? (
+                    <Chip label={job.rowsProcessed.toLocaleString()} size="small" variant="outlined" />
                   ) : (
                     <Typography variant="body2" color="textSecondary">-</Typography>
                   )}

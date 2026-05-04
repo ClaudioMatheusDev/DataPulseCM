@@ -22,7 +22,7 @@ export const jobsApi = {
   },
 
   getFailedJobs: async () => {
-    const { data } = await api.get<JobExecution[]>('/jobs/failed');
+    const { data } = await api.get<{ data: JobExecution[]; count: number }>('/jobs/failed');
     return data;
   },
 

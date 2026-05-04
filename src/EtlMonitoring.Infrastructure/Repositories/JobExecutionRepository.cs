@@ -76,8 +76,8 @@ namespace EtlMonitoring.Infrastructure.Repositories
                 SELECT 
                     ExecutionId,
                     JobName,
-                    StartDateTime,
-                    EndDateTime,
+                    StartDateTime AS StartDate,
+                    EndDateTime   AS EndDate,
                     Status,
                     ErrorMessage,
                     RowsProcessed,
@@ -87,7 +87,23 @@ namespace EtlMonitoring.Infrastructure.Repositories
                     ExecutionDurationMs,
                     ServerName,
                     DatabaseName,
-                    CreatedAt
+                    CreatedBy,
+                    CreatedAt,
+                    Source,
+                    Destination,
+                    RecordsExpected,
+                    RecordsActual,
+                    DataQualityScore,
+                    RetryCount,
+                    ParentExecutionId,
+                    ExecutionContext,
+                    MachineName,
+                    ProcessId,
+                    ThreadId,
+                    MemoryUsageMB,
+                    Tags,
+                    CorrelationId,
+                    UserName
                 FROM [dbo].[ETL_JobExecutionLog]
                 WHERE ExecutionId = @ExecutionId";
 
@@ -178,8 +194,8 @@ namespace EtlMonitoring.Infrastructure.Repositories
                 SELECT TOP (@Limit)
                     ExecutionId,
                     JobName,
-                    StartDateTime,
-                    EndDateTime,
+                    StartDateTime AS StartDate,
+                    EndDateTime   AS EndDate,
                     Status,
                     ErrorMessage,
                     RowsProcessed,
@@ -221,8 +237,8 @@ namespace EtlMonitoring.Infrastructure.Repositories
                 SELECT TOP 1
                     ExecutionId,
                     JobName,
-                    StartDateTime,
-                    EndDateTime,
+                    StartDateTime AS StartDate,
+                    EndDateTime   AS EndDate,
                     Status,
                     ErrorMessage,
                     RowsProcessed,
@@ -249,8 +265,8 @@ namespace EtlMonitoring.Infrastructure.Repositories
                 SELECT TOP (@Limit)
                     ExecutionId,
                     JobName,
-                    StartDateTime,
-                    EndDateTime,
+                    StartDateTime AS StartDate,
+                    EndDateTime   AS EndDate,
                     Status,
                     ErrorMessage,
                     RowsProcessed,

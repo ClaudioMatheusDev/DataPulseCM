@@ -2,7 +2,7 @@
 using EtlMonitoring.Core.DTOs;
 using EtlMonitoring.Core.Core.Interfaces;
 
-namespace EtlMonitor.Api.Controllers
+namespace EtlMonitoring.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
@@ -54,9 +54,6 @@ namespace EtlMonitor.Api.Controllers
         [HttpPost("start")]
         public async Task<IActionResult> StartJob([FromBody] StartJobRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.JobName))
-                return BadRequest(new { message = "Nome do job é obrigatório" });
-
             var executionId = await _repository.CreateJobExecutionAsync(request.JobName);
             
             _logger.LogInformation("Job {JobName} iniciado | ExecutionId: {ExecutionId}", 
@@ -69,9 +66,6 @@ namespace EtlMonitor.Api.Controllers
         [HttpPost("{id}/finish")]
         public async Task<IActionResult> FinishJob(long id, [FromBody] FinishJobRequest request)
         {
-            if (string.IsNullOrWhiteSpace(request.Status))
-                return BadRequest(new { message = "Status é obrigatório" });
-
             await _repository.UpdateJobExecutionAsync(id, request.Status, request.ErrorMessage);
             
             _logger.LogInformation("Job finalizado | ExecutionId: {ExecutionId} | Status: {Status}", 

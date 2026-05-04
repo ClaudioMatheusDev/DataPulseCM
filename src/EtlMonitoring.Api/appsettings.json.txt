@@ -1,6 +1,6 @@
 {
   "ConnectionStrings": {
-    "DefaultConnection": "Server=(localdb)\\MinhaInstancia;Database=DataPulseCM;Integrated Security=True;TrustServerCertificate=true;"
+    "DefaultConnection": "Server=localhost;Database=DataPulseCM;Integrated Security=true;TrustServerCertificate=true;"
   },
   "Logging": {
     "LogLevel": {
