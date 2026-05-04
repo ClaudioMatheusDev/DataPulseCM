@@ -110,7 +110,7 @@ export default function JobDetailsPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3 } }}>
       {/* Botão Voltar */}
       <Button
         startIcon={<ArrowBackIcon />}

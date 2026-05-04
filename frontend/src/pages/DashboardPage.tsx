@@ -60,13 +60,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3, md: 4 } }}>
-      <Typography variant="h4" component="h1" gutterBottom fontWeight="bold" textAlign="center">
-        📊 Dashboard - DataPulseCM
-      </Typography>
-      <Typography variant="subtitle1" color="textSecondary" gutterBottom textAlign="center" sx={{ mb: 4 }}>
-        Monitoramento de Execuções de Jobs ETL
-      </Typography>
+    <Container maxWidth="lg" sx={{ mt: 4, mb: 4, px: { xs: 2, sm: 3 } }}>
 
       {statistics && (
         <Box sx={{ mb: 4 }}>
@@ -81,7 +75,7 @@ export default function DashboardPage() {
       )}
 
       <Box>
-        <Typography variant="h5" gutterBottom sx={{ mb: 2, mt: 2 }} textAlign="center">
+        <Typography variant="h6" gutterBottom sx={{ mb: 2, mt: 2, fontWeight: 'bold' }}>
           Execuções Recentes
         </Typography>
         <JobsTable jobs={jobs} />
