@@ -20,6 +20,47 @@ services:
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------
+  # Inicialização do banco — roda os scripts SQL na ordem correta e encerra
+  # ---------------------------------------------------------------------------
+  db-init:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    environment:
+      SA_PASSWORD: "${SA_PASSWORD:-DataPulseCM@2024!}"
+    volumes:
+      - ./database/scripts:/scripts:ro
+    user: root
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        set -e
+        SQLCMD=/opt/mssql-tools18/bin/sqlcmd
+        SERVER="sqlserver,1433"
+        PASS="$$SA_PASSWORD"
+
+        echo ">>> Criando banco DataPulseCM..."
+        $$SQLCMD -S $$SERVER -U sa -P "$$PASS" -No \
+          -Q "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'DataPulseCM') CREATE DATABASE [DataPulseCM]"
+
+        echo ">>> 01 - Criando tabelas..."
+        $$SQLCMD -S $$SERVER -U sa -P "$$PASS" -d DataPulseCM -No -i /scripts/01-create-tables.sql
+
+        echo ">>> 02 - Criando stored procedures..."
+        $$SQLCMD -S $$SERVER -U sa -P "$$PASS" -d DataPulseCM -No -i /scripts/02-create-stored-procedures.sql
+
+        echo ">>> 03 - Inserindo dados de exemplo..."
+        $$SQLCMD -S $$SERVER -U sa -P "$$PASS" -d DataPulseCM -No -i /scripts/03-seed-data.sql
+
+        echo ">>> 04 - Enriquecendo campos de log..."
+        $$SQLCMD -S $$SERVER -U sa -P "$$PASS" -d DataPulseCM -No -i /scripts/04-enrich-log-fields.sql
+
+        echo ">>> Banco inicializado com sucesso!"
+    restart: "no"
+
+  # ---------------------------------------------------------------------------
   # API .NET 9
   # ---------------------------------------------------------------------------
   api:
@@ -36,6 +77,8 @@ services:
     depends_on:
       sqlserver:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     volumes:
       - api_logs:/app/logs
     restart: unless-stopped

@@ -48,7 +48,7 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-    // Exception Handler
+    // Exception Handler (registro opcional + middleware explicito no pipeline)
     builder.Services.AddExceptionHandler<GlobalExceptionHandlerMiddleware>();
     builder.Services.AddProblemDetails();
 
@@ -92,13 +92,15 @@ if (string.IsNullOrEmpty(connectionString))
     throw new InvalidOperationException("Connection string 'DefaultConnection' não encontrada.");
 }
 
-builder.Services.AddScoped<IJobExecutionRepository>(
-    provider => new JobExecutionRepository(connectionString)
-);
+// Registrar fábrica de conexão e repositório via DI
+builder.Services.AddTransient<System.Func<Microsoft.Data.SqlClient.SqlConnection>>(provider =>
+    () => new Microsoft.Data.SqlClient.SqlConnection(connectionString));
+
+builder.Services.AddScoped<IJobExecutionRepository, EtlMonitoring.Infrastructure.Repositories.JobExecutionRepository>();
 
 var app = builder.Build();
 
-// Adicionar Exception Handler no pipeline
+// Adicionar Exception Handler no pipeline (usa implementação registrada via AddExceptionHandler)
 app.UseExceptionHandler();
 
 // Configurar pipeline HTTP
