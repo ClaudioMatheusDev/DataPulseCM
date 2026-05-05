@@ -8,16 +8,16 @@ namespace EtlMonitoring.Infrastructure.Repositories
 {
     public class JobExecutionRepository : IJobExecutionRepository
     {
-        private readonly string _connectionString;
+        private readonly System.Func<Microsoft.Data.SqlClient.SqlConnection> _connectionFactory;
 
-        public JobExecutionRepository(string connectionString)
+        public JobExecutionRepository(System.Func<Microsoft.Data.SqlClient.SqlConnection> connectionFactory)
         {
-            _connectionString = connectionString;
+            _connectionFactory = connectionFactory;
         }
 
         public async Task<long> CreateJobExecutionAsync(string jobName)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var parameters = new DynamicParameters();
             parameters.Add("@JobName", jobName);
@@ -34,7 +34,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task UpdateJobExecutionAsync(long executionId, string status, string? errorMessage = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var parameters = new DynamicParameters();
             parameters.Add("@ExecutionId", executionId);
@@ -50,7 +50,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IList<JobExecutionDto>> GetJobExecutionsAsync(JobExecutionFiltrosDto filtros)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var parameters = new DynamicParameters();
             parameters.Add("@JobName", filtros.JobName);
@@ -70,7 +70,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<JobExecution?> GetJobExecutionByIdAsync(long executionId)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT 
@@ -113,7 +113,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IEnumerable<JobExecution>> GetRecentExecutionsAsync(int limit = 50)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var result = await connection.QueryAsync<JobExecution>(
                 "usp_ETL_GetRecentExecutions",
@@ -126,7 +126,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<int> GetTotalExecutionsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT COUNT(*)
@@ -140,7 +140,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<int> GetSuccessfulExecutionsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT COUNT(*)
@@ -155,7 +155,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<int> GetFailedExecutionsAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT COUNT(*)
@@ -170,7 +170,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<decimal> GetSuccessRateAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT 
@@ -188,7 +188,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IEnumerable<JobExecution>> GetFailedExecutionsAsync(int limit = 20)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT TOP (@Limit)
@@ -216,7 +216,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IDictionary<string, int>> GetExecutionsByStatusAsync(DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT Status, COUNT(*) AS Count
@@ -231,7 +231,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<JobExecution?> GetLastExecutionByJobNameAsync(string jobName)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT TOP 1
@@ -259,7 +259,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IEnumerable<JobExecution>> GetExecutionHistoryByJobNameAsync(string jobName, int limit = 50)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT TOP (@Limit)
@@ -287,7 +287,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<decimal> GetJobSuccessRateAsync(string jobName, DateTime? startDate = null, DateTime? endDate = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT 
@@ -307,7 +307,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
         // Job Execution Details (Steps)
         public async Task<long> CreateJobExecutionDetailAsync(long executionId, string stepName, int stepOrder, string? stepMessage = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 INSERT INTO [dbo].[ETL_JobExecutionDetails] 
@@ -329,7 +329,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task UpdateJobExecutionDetailAsync(long detailId, string stepStatus, string? stepMessage = null)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 UPDATE [dbo].[ETL_JobExecutionDetails]
@@ -349,7 +349,7 @@ namespace EtlMonitoring.Infrastructure.Repositories
 
         public async Task<IEnumerable<JobExecutionDetail>> GetExecutionDetailsByExecutionIdAsync(long executionId)
         {
-            using var connection = new SqlConnection(_connectionString);
+            using var connection = _connectionFactory();
 
             var sql = @"
                 SELECT 
